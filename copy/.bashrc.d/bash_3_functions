@@ -1,0 +1,93 @@
+##############################################################################
+# FS_OPS                                                                     #
+##############################################################################
+count() {
+  ls -1 $1 | wc -l
+}
+
+rcount() {
+  find $1 -type f | wc -l
+}
+
+lsrmod(){
+    find $1 -type f -print0 | xargs -0 stat --format '%Y :%y %n' | sort -nr | cut -d: -f2- | head -n $2
+}
+
+function swap()
+{
+    local TMPFILE=tmp.$$
+    mv "$1" $TMPFILE
+    mv "$2" "$1"
+    mv $TMPFILE "$2"
+}
+
+##############################################################################
+# OPENSSL                                                                    #
+##############################################################################
+encrypt() {
+  openssl enc -aes-256-cbc -p -in $1 -out $2
+}
+
+decrypt() {
+  openssl enc -aes-256-cbc -d -in $1 -out $2
+} 
+
+##############################################################################
+# DOCKER                                                                     #
+##############################################################################
+# alias disable_restart='docker update --restart=no $(docker ps -a -q)'
+# alias stop_all='docker stop $(docker ps -q)'
+
+function dexec()
+{
+    docker_id=$(docker container ls | grep $1 | awk '{print $1}')
+    docker exec -it $docker_id /bin/sh
+}
+
+function drun()
+{
+    docker_id=$(docker container ls | grep $1 | awk '{print $1}')
+    docker run -it --rm $docker_id /bin/sh
+}
+
+function dlogs()
+{
+    docker_id=$(docker container ls | grep $1 | awk '{print $1}')
+    docker logs -f $docker
+}
+
+function dinip()
+{
+  docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $1
+}
+
+function dingat()
+{
+  docker inspect -f '{{range.NetworkSettings.Networks}}{{.Gateway}}{{end}}' $1
+}
+
+function dinmac()
+{
+   docker inspect -f '{{range.NetworkSettings.Networks}}{{.MacAddress}}{{end}}' $1
+}
+
+function dsniff()
+{
+    gateway=$(dingat $1)
+    ifc=$(ip addr|grep $gateway|awk '{print $NF}')
+    if [[ $2 = "store" ]] ; then
+        sudo tcpdump udp -nvvv  -T snmp -i $ifc -w dump.pcap
+    else
+        sudo tcpdump udp -nvvv  -T snmp -i $ifc
+    fi
+}
+
+
+##############################################################################
+# ETC                                                                        #
+##############################################################################
+pathadd() {
+    if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
+        PATH="${PATH:+"$PATH:"}$1"
+    fi
+}

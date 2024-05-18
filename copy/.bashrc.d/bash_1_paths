@@ -1,0 +1,20 @@
+##############################################################################
+# PATHS                                                                      #
+##############################################################################
+# Library path
+# export LD_LIBRARY_PATH="/lib:/usr/lib:/usr/local/lib"
+
+# # PATH
+# # Golang
+# export PATH=/usr/local/go/bin:$PATH
+# export GOPATH=$HOME/.local/share/go
+# # Hyperledger Fabric
+# #export PATH=/home/andalexo/dev/go/src/github.com/andalexo/fabric-samples/bin/:$PATH
+# # MAVEN
+# #export PATH=/opt/maven/bin:$PATH
+# # KAFKA
+# #export PATH=/home/andalexo/dev/kafka/kafka_2.13-2.8.0/bin:$PATH
+# # PyENV
+# export PYENV_ROOT="$HOME/.local/share/pyenv"
+# export PATH="$PYENV_ROOT/bin:$PATH"
+# eval "$(pyenv init --path)"

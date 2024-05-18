@@ -1,0 +1,356 @@
+---
+- name: Setup Fedora System
+  hosts: localhost
+  become: true
+  tasks:
+    - name: DNF - Perform system upgrade
+      dnf:
+        name: '*'
+        state: latest
+        update_cache: yes
+        skip_broken: yes
+        allow_downgrade: no
+
+    - name: DNF - Install packages - DNF
+      dnf:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - dnf-plugin-system-upgrade
+        - dnf-plugins-core
+        - fedora-workstation-repositories
+
+    - name: DNF - Enable repositories - google-chrome
+      dnf:
+        name: "{{ item }}"
+        enablerepo: "{{ item }}"
+        state: present
+      loop:
+        - google-chrome
+
+    - name: DNF - Perform system update
+      dnf:
+        name: '*'
+        state: latest
+        update_cache: yes
+
+    - name: DNF - Install packages - libraries
+      dnf:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - '@development-tools'
+        - gcc
+        - make
+        - cmake
+        - extra-cmake-modules
+        - boost
+        - boost-devel
+        - gsl
+        - gsl-devel
+        - blas
+        - blas-devel
+        - lapack
+        - lapack-devel
+        - atlas
+        - atlas-devel
+        - glm-devel
+        - hdf5
+        - hdf5-devel
+        - hdf5-static
+        - geos
+        - geos-devel
+        - glew
+        - glew-devel
+        - libGLEW
+        - mesa-libGL
+        - mesa-libGL-devel
+        - mesa-libEGL
+        - mesa-libEGL-devel
+        - mesa-libGLU-devel
+        - freeglut
+        - freeglut-devel
+        - libpq-devel
+        - libxml2
+        - libxml2-devel
+        - libxslt
+        - libxslt-devel
+        - openssl-devel
+        - tk-devel
+        - libffi-devel
+        - zlib-devel
+        - bzip2
+        - bzip2-devel
+        - xz-devel
+        - python3-devel
+        - powerline
+        - powerline-fonts
+        - readline-devel
+
+    - name: DNF - Install packages - tools
+      dnf:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - zsh
+        - fish
+        - collectd-sensors
+        - lm_sensors
+        - jq
+        - gettext
+        - screen
+        - tmux
+        - nmap
+        - nload
+        - sysstat
+        - iotop
+        - htop
+        - btop
+        - exa
+        - neofetch
+        - neovim
+        - git
+        - bat
+        - colordiff
+        - ack
+        - ripgrep
+        - ImageMagick
+        - ImageMagick-devel
+        - ImageMagick-libs
+
+    - name: DNF - Install packages - Databases
+      dnf:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - sqlite
+        - sqlite-devel
+        - postgresql
+        - postgresql-server
+        - community-mysql
+        - community-mysql-server
+
+    - name: DNF - Install packages - Java, NodeJS, Pipx, Ruby
+      dnf:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - java-1.8.0-openjdk
+        - java-1.8.0-openjdk-devel
+        - nodejs
+        - pipx
+        - ruby
+        - ruby-devel
+
+    - name: DNF - Install packages - OpenCV without weak dependencies
+      dnf:
+        name: "{{ item }}"
+        state: present
+        install_options: "--setopt=install_weak_deps=False"
+      loop:
+        - opencv
+        - opencv-contrib
+        - opencv-core
+        - opencv-devel
+
+    - name: DNF - Install packages - Podman
+      dnf:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - podman
+        - podman-compose
+        - podman-plugins
+        - podman-tui
+        # - podman-docker
+
+    - name: DNF - Install packages - GUI main
+      dnf:
+        name: "{{ item }}"
+        state: present
+        install_options: "--setopt=install_weak_deps=False"
+      loop:
+        - google-chrome-stable
+        - kate
+        - gparted
+        - wireshark
+        - keepassxc
+        - thunderbird
+        - rdesktop
+        - remmina
+        - tigervnc
+        - qgis
+        - qgis-devel
+        - python3-qgis
+        - krita
+        - kolourpaint
+        - gimp
+        - gmic
+        - gmic-devel
+        - gmic-gimp
+        - simplescreenrecorder
+        - kdenlive
+        - ktorrent
+
+    - name: Prompt for SNMP packages
+      pause:
+        prompt: "Do you want to install SNMP packages ? (yes/no)"
+      register: user_response_snmp
+
+    - name: DNF - Install packages - SNMP
+      dnf:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - net-snmp
+        - net-snmp-devel
+        - net-snmp-devel
+      when: user_response_snmp.user_input | lower == 'yes'
+
+    - name: Prompt for ROOT package
+      pause:
+        prompt: "Do you want to install ROOT ? (yes/no)"
+      register: user_response_root
+
+    - name: DNF - Install packages - ROOT
+      dnf:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - root
+      when: user_response_root.user_input | lower == 'yes'
+
+    - name: Prompt for Octave package
+      pause:
+        prompt: "Do you want to install Octave ? (yes/no)"
+      register: user_response_octave
+
+    - name: DNF - Install packages - Octave
+      dnf:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - octave
+        - octave-devel
+      when: user_response_octave.user_input | lower == 'yes'
+
+    - name: DNF - Add repositories
+      dnf_repository:
+        name: "{{ item.name }}"
+        description: "{{ item.description }}"
+        baseurl: "{{ item.baseurl }}"
+        enabled: yes
+        gpgcheck: yes
+        gpgkey: "{{ item.gpgkey }}"
+      loop:
+        - { name: brave-browser, description: "Brave Browser Repository", baseurl: "https://brave-browser-rpm-release.s3.brave.com/x86_64/", gpgkey: "https://brave-browser-rpm-release.s3.brave.com/brave-core.asc" }
+        - { name: docker-ce, description: "Docker CE Repository", baseurl: "https://download.docker.com/linux/fedora/$releasever/$basearch/stable", gpgkey: "https://download.docker.com/linux/fedora/gpg" }
+        - { name: anydesk, description: "AnyDesk Fedora - Stable", baseurl: "http://rpm.anydesk.com/fedora/$basearch/", gpgkey: "https://keys.anydesk.com/repos/RPM-GPG-KEY" }
+
+    - name: DNF - Perform system update
+      dnf:
+        name: '*'
+        state: latest
+        update_cache: yes
+
+    - name: DNF - Install packages - docker-ce, brave-browser, anydesk
+      dnf:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        - docker-buildx-plugin
+        - docker-compose-plugin
+        - brave-browser
+        - anydesk
+
+    - name: Flatpak - Add Flathub remote
+      command: flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+    - name: Flatpak - Install applications
+      flatpak:
+        name: "{{ item.name }}"
+        state: present
+      loop:
+        - { name: 'com.spotify.Client' }
+        - { name: 'com.skype.Client' }
+        - { name: 'chat.rocket.RocketChat' }
+        - { name: 'com.slack.Slack' }
+        - { name: 'com.mattermost.Desktop' }
+        - { name: 'com.getpostman.Postman' }
+        - { name: 'rest.insomnia.Insomnia' }
+        - { name: 'com.mongodb.Compass' }
+        - { name: 'io.dbeaver.DBeaverCommunity' }
+
+    - name: Binaries - Download and set permissions
+      get_url:
+        url: "{{ item.url }}"
+        dest: "{{ ansible_env.HOME }}/.local/bin"
+        creates: "{{ ansible_env.HOME }}/.local/bin/{{ item.creates }}"
+        mode: '0755'
+      loop:
+        - { url: "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl", creates: kubectl }
+
+    - name: Binaries - Download, unpack, and set permissions
+      unarchive:
+        src: "{{ item.src }}"
+        dest: "{{ ansible_env.HOME }}/.local/bin"
+        remote_src: yes
+        creates: "{{ ansible_env.HOME }}/.local/bin/{{ item.creates }}"
+        mode: '0755'
+      loop:
+        - { src: "https://github.com/peco/peco/releases/download/v0.5.11/peco_linux_amd64.tar.gz", creates: peco }
+
+    - name: Systemd - Start and enable services
+      systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - docker
+        - sshd
+
+    - name: Fish - Install Oh My Fish and Fisher plugins
+      command: "{{ item.command }}"
+      loop:
+        - { command: "curl -L https://get.oh-my.fish | fish" }
+        - { command: "fish -c 'curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher'" }
+        - { command: "fish -c 'omf install bobthefish'" }
+        - { command: "fish -c 'fisher install jorgebucaran/nvm.fish jethrokuan/z simnalamburt/shellder'" }
+
+    - name: Kafka - Download and unpack distribution
+      unarchive:
+        src: "https://downloads.apache.org/kafka/3.7.0/kafka_2.13-3.7.0.tgz"
+        dest: "{{ ansible_env.HOME }}/.local/share/kafka"
+        remote_src: yes
+        creates: "{{ ansible_env.HOME }}/.local/share/kafka/kafka_2.13-3.7.0"
+
+    - name: Filesystem - Create standard directories
+      file:
+        path: "{{ ansible_env.HOME }}/{{ item }}"
+        state: directory
+        mode: 0755
+      loop:
+        - Documents/tmp
+        - Documents/etc
+        - Documents/dev
+        - Documents/dev/repos
+        - Documents/dev/repos/foss
+        - Documents/mounts
+        - Music/mounts
+        - Pictures/mounts
+        - Videos/mounts
+
+    - name: Filesystem - Copy files and folders to system
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0644'
+        recurse: "{{ item.recurse }}"
+      loop:
+        - { src: "copy/.bashrc.d", dest: "~/.bashrc.d", recurse: yes }
+        - { src: "copy/.vimrc", dest: "~/.vimrc", recurse: no }

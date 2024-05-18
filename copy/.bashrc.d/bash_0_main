@@ -1,0 +1,12 @@
+parse_git_branch() {
+     git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
+}
+
+# PS1 -> [HH:MM] username@host folder \>
+# PS1='\[\e[1;37m\][\A]\[\e[1;34m\] \u\[\e[1;31m\]@\[\e[1;32m\]\h\[\e[1;32m\]:\[\e[1;35m\]\W\> \[\e[00m\]'
+# PS1 -> folder >
+PS1='\[\e[1;35m\]\W \[\e[1;34m\]$(parse_git_branch)\[\e[1;35m\]> \[\e[00m\]'
+
+# History - use up/down arrow to search
+bind '"\e[A"':history-search-backward
+bind '"\e[B"':history-search-forward
